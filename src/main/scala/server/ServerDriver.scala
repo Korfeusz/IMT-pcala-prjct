@@ -1,15 +1,14 @@
 package server
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import client.CommandLineInterfaceActor
+import server.actors.AuthActor
 
 object ServerDriver extends App {
 
   val system: ActorSystem = ActorSystem("ServerSystem")
 
-  //#create-actors
-  // Create the printer actor
-//  val printer: ActorRef = system.actorOf(c"printerActor")
+
+  val authActorRef: ActorRef = system.actorOf(AuthActor.props, "AuthActor")
 
 
 
