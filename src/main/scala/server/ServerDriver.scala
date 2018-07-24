@@ -7,8 +7,8 @@ object ServerDriver extends App {
 
   val system: ActorSystem = ActorSystem("ServerSystem")
 
-
-  val authActorRef: ActorRef = system.actorOf(AuthActor.props, "AuthActor")
+//  val databaseActorRef: ActorRef = system.actorOf()
+//  val authActorRef: ActorRef = system.actorOf(AuthActor.props(), "AuthActor")
 
 
 
