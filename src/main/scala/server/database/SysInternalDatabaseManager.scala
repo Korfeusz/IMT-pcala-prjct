@@ -30,6 +30,9 @@ object SysInternalDatabaseManager {
     users(username)("active") = true
   }
 
+  def getToken(username: String) ={
+    users(username)("token")
+  }
   def testIfAdmin(username: String): Boolean = {
     println("Testing if Admin")
     users(username)("admin").asInstanceOf[Boolean]
@@ -42,5 +45,8 @@ object SysInternalDatabaseManager {
     users.filter(p => !p._2("active").asInstanceOf[Boolean]).keySet
   }
 
+  def getUserCredentials(username: String) = {
+    users(username)
+  }
 
 }

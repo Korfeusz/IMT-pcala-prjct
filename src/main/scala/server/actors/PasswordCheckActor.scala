@@ -17,7 +17,7 @@ object PasswordCheckActor {
 
 class PasswordCheckActor(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef) extends Actor{
   import PasswordCheckActor._
-  databaseActor ! getUserCredentials(username)
+  databaseActor ! GetUserCredentials(username)
 
   override def receive: Receive = {
     case UserCredentials(hash, salt, activated) if activated =>

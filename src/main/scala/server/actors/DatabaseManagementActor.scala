@@ -5,6 +5,8 @@ import common.messages.AdminToDatabaseMessages.{ActivateUser, GetInactiveUsers, 
 import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
 import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
 import common.messages.CommonMessages._
+import server.actors.messages.PasswordCheckToDatabaseMessages.{GetUserCredentials, UserCredentials}
+import server.actors.messages.TokenCheckToDatabaseMessage.GetToken
 
 object DatabaseManagementActor {
   def props(): Props = Props(new DatabaseManagementActor())
@@ -12,7 +14,8 @@ object DatabaseManagementActor {
 
 class DatabaseManagementActor() extends Actor{
   import DatabaseManagementActor._
-  import server.database.SysInternalDatabaseManager
+  import server.database.{SysInternalDatabaseManager, DatabaseManagement}
+
   override def receive: Receive = {
     case AddUser(username, encryptedPass, salt) =>
       SysInternalDatabaseManager.addUser(username, encryptedPass, salt)
@@ -20,9 +23,14 @@ class DatabaseManagementActor() extends Actor{
       SysInternalDatabaseManager.deleteToken(username)
     case Token(username, tokenString) =>
       SysInternalDatabaseManager.addToken(username, tokenString)
+    case GetUserCredentials(username) =>
+      val cred = SysInternalDatabaseManager.getUserCredentials(username)
+      sender ! UserCredentials(cred("hash"), cred("salt"), cred("active"))
+    case GetToken(username) =>
+      sender ! Token(username, SysInternalDatabaseManager.getToken(username).asInstanceOf[String])
     case TokenWrap(message, token) =>
       context.actorOf(TokenCheckActor.props(token, message, self, self))
-    case TokenCheckResult(senderName, message, result) if result && SysInternalDatabaseManager.testIfActive(senderName) =>
+    case TokenCheckResult(senderName, message, result) if result =>
       message match {
         case GetInactiveUsers if SysInternalDatabaseManager.testIfAdmin(senderName) =>
           sender ! InactiveUsers(SysInternalDatabaseManager.getInactiveUsers)
@@ -30,11 +38,11 @@ class DatabaseManagementActor() extends Actor{
           SysInternalDatabaseManager.activateUser(username)
           // Send confirmation to user (username)
         case SaveData(data, where) =>
-          SysInternalDatabaseManager.saveData(data, where)
+          DatabaseManagement.saveData(data, where)
         case LoadData(where) =>
-          SysInternalDatabaseManager.loadData(where)
+          DatabaseManagement.loadData(where)
         case DeleteData(where) =>
-          SysInternalDatabaseManager.deleteData(where)
+          DatabaseManagement.deleteData(where)
       }
     case unexpected: Any =>
       println("Response: Unexpected " + unexpected)

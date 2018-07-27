@@ -10,12 +10,12 @@ object PasswordCheckToAuthActorMessages {
 }
 
 object PasswordCheckToDatabaseMessages {
-  final case class getUserCredentials(username: String)
-  final case class UserCredentials(hash: String, salt: String, activated: Boolean)
+  final case class GetUserCredentials(username: String)
+  final case class UserCredentials(hash: Any, salt: Any, activated: Any)
 
 }
 
 object  TokenCheckToDatabaseMessage{
-  final case class getToken(username: String)
+  final case class GetToken(username: String)
 }
 
