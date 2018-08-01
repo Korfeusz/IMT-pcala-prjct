@@ -11,7 +11,7 @@ object PasswordCheckToAuthActorMessages {
 
 object PasswordCheckToDatabaseMessages {
   final case class GetUserCredentials(username: String)
-  final case class UserCredentials(hash: Any, salt: Any, activated: Any)
+  final case class UserCredentials(hash: String, salt: String, activated: Any)
 
 }
 

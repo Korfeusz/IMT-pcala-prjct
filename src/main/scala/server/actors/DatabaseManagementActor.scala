@@ -25,7 +25,7 @@ class DatabaseManagementActor() extends Actor{
       SysInternalDatabaseManager.addToken(username, tokenString)
     case GetUserCredentials(username) =>
       val cred = SysInternalDatabaseManager.getUserCredentials(username)
-      sender ! UserCredentials(cred("hash"), cred("salt"), cred("active"))
+      sender ! UserCredentials(cred("hash").toString, cred("salt").toString, cred("active"))
     case GetToken(username) =>
       sender ! Token(username, SysInternalDatabaseManager.getToken(username).asInstanceOf[String])
     case TokenWrap(message, token) =>

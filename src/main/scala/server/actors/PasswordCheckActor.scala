@@ -20,7 +20,7 @@ class PasswordCheckActor(username: String, password: String, databaseActor: Acto
   databaseActor ! GetUserCredentials(username)
 
   override def receive: Receive = {
-    case UserCredentials(hash, salt, activated) if activated =>
+    case UserCredentials(hash, salt, activated) if activated.asInstanceOf[Boolean] =>
       parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt))
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
   }
