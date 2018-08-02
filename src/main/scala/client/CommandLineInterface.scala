@@ -1,13 +1,17 @@
 package client
 import akka.actor.ActorRef
+import client.ClientDriver.system
+import client.actors.ClientActor
+import client.actors.messages.internalClientMessages.outgoingMessage
 
 object CommandLineInterface {
-  def apply(clientActorRef: ActorRef, printerActorRef: ActorRef): CommandLineInterface =
-    new CommandLineInterface(clientActorRef, printerActorRef: ActorRef)
+  def apply(clientActorRef: ActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses): CommandLineInterface =
+    new CommandLineInterface(clientActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses)
 }
 
-class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef) {
-  val sessionManager: SessionManager = SessionManager(clientActorRef, printerActorRef)
+class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses) {
+  val sessionManager: SessionManager = SessionManager(clientActorRef, printerActorRef, serverAddresses: ServerActorAddresses)
+  var username: String = ""
 
   def printGreetingMessage(): Unit = {
     printerActorRef ! "Welcome! \n"
@@ -24,11 +28,11 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef) 
   def parseInput(input: Seq[String]): Unit = input match {
     case Seq(command) => command match {
       case "register" =>
-        sessionManager.register()
+        username = sessionManager.register()
       case "login" =>
-        println("login")
+        username = sessionManager.login()
       case "logout" =>
-        println("logout")
+        sessionManager.logout(username)
       case "stop" | "quit" | "q" | "exit" =>
         sys.exit()
       case _ =>
@@ -39,6 +43,7 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef) 
         println("get unactivated users")
       case "activate" => println("activate: " + parameter)
       case "admin" => println("make admin: " + parameter)
+      case "text" => clientActorRef ! outgoingMessage(parameter, serverAddresses.databaseAddress)
       case _ => println("WRONG!")
     }
 

@@ -11,6 +11,7 @@ object ServerDriver extends App {
 
   val databaseActorRef: ActorRef = system.actorOf(DatabaseManagementActor.props(), "DbActor")
   val authActorRef: ActorRef = system.actorOf(AuthActor.props(databaseActorRef), "AuthActor")
-
+  println(databaseActorRef.path)
+  println(authActorRef.path)
 
 }

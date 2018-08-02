@@ -27,6 +27,7 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
       if(checkResult) {
         val tokenString = (Random.alphanumeric take 16).mkString
         databaseActor ! Token(username, tokenString)
+
         // TODO send success message and token to client
       } else {
         // TODO send fail message
