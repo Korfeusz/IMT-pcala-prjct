@@ -17,20 +17,26 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
   import AuthActor._
 
   override def receive: Receive = {
-    case RequestRegister(username, password) =>
-      val hashNSalt = generateNewHashAndSalt(password)
-      databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
-      sender ! Response("Account registration request created, please be patient.")
-    case Login(username, password) =>
-      context.actorOf(PasswordCheckActor.props(username, password, databaseActor, self))
-    case passwordCheckResult(username, checkResult) =>
+
+    case ActorRefWrap(clientRef, message) =>
+      message match {
+        case Login(username, password) =>
+          sender ! "Login request, test"
+          context.actorOf(PasswordCheckActor.props(username, password, databaseActor, self, clientRef))
+
+        case RequestRegister(username, password) =>
+          val hashNSalt = generateNewHashAndSalt(password)
+          databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
+          sender ! Response("Account registration request created, please be patient.")
+      }
+    case passwordCheckResult(username, checkResult, clientRef) =>
       if(checkResult) {
         val tokenString = (Random.alphanumeric take 16).mkString
         databaseActor ! Token(username, tokenString)
-
-        // TODO send success message and token to client
+        clientRef ! Token(username, tokenString)
+        clientRef ! "Login Successful"
       } else {
-        // TODO send fail message
+        clientRef ! "Something went wrong, please try again."
       }
     case TokenWrap(message, token) =>
       context.actorOf(TokenCheckActor.props(token, message, databaseActor, self))
@@ -39,6 +45,8 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         case Logout(username) =>
           databaseActor ! DeleteToken(username)
       }
+    case actor : ActorRef =>
+      databaseActor ! actor
     case unexpected: Any =>
       println("Response: Unexpected " + unexpected)
   }

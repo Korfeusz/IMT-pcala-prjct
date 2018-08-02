@@ -1,6 +1,6 @@
 package server.actors
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import common.messages.AdminToDatabaseMessages.{ActivateUser, GetInactiveUsers, InactiveUsers}
 import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
 import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
@@ -22,6 +22,7 @@ class DatabaseManagementActor() extends Actor{
     case DeleteToken(username) =>
       SysInternalDatabaseManager.deleteToken(username)
     case Token(username, tokenString) =>
+      println("WWW")
       SysInternalDatabaseManager.addToken(username, tokenString)
     case GetUserCredentials(username) =>
       val cred = SysInternalDatabaseManager.getUserCredentials(username)
@@ -44,6 +45,8 @@ class DatabaseManagementActor() extends Actor{
         case DeleteData(where) =>
           DatabaseManagement.deleteData(where)
       }
+    case actor: ActorRef =>
+      actor ! "I got it!"
     case unexpected: Any =>
       println("Response: Unexpected " + unexpected)
   }

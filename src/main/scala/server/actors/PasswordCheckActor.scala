@@ -9,19 +9,22 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object PasswordCheckActor {
-  def props(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef): Props =
-    Props(new PasswordCheckActor(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef))
+  def props(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef, clientRef: ActorRef): Props =
+    Props(new PasswordCheckActor(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef, clientRef: ActorRef))
 
 
 }
 
-class PasswordCheckActor(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef) extends Actor{
+class PasswordCheckActor(username: String, password: String, databaseActor: ActorRef, parentActor: ActorRef, clientRef: ActorRef) extends Actor{
   import PasswordCheckActor._
+  println("Is password checker working?")
   databaseActor ! GetUserCredentials(username)
 
   override def receive: Receive = {
     case UserCredentials(hash, salt, activated) if activated.asInstanceOf[Boolean] =>
-      parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt))
+      println("Checking credentials")
+      clientRef ! "Checking credentials."
+      parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt), clientRef)
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
   }
 

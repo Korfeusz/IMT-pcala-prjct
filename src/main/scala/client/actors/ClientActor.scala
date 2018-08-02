@@ -17,7 +17,7 @@ class ClientActor(printerActorRef: ActorRef) extends Actor{
 
   override def receive: Receive = {
     case outgoingMessage(message, recipient) =>
-      context.actorSelection(recipient) ! message
+      context.actorSelection(recipient) ! ActorRefWrap(self, message)
     case Response(text) =>
       printerActorRef ! text
     case text: String =>

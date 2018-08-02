@@ -1,10 +1,22 @@
 package server.database
+import java.security.KeyStore.PasswordProtection
+
+import server.Password
+
 import scala.collection.mutable
 import scala.collection.mutable.Map
 
 object SysInternalDatabaseManager {
   var users : mutable.Map[String, mutable.Map[String, Any]] = mutable.Map()
+  generateAdmin()
 
+  def generateAdmin(): Unit = {
+    val adminHashAndSalt = Password.generateNewHashAndSalt("admin")
+    addUser("admin", adminHashAndSalt("hash"), adminHashAndSalt("salt"))
+    activateUser("admin")
+    makeAdmin("admin")
+
+  }
   def addUser(username: String, hash: String, salt: String): Unit = {
     println("Adding user... ")
     val data = mutable.Map( "hash" -> hash,
@@ -12,6 +24,7 @@ object SysInternalDatabaseManager {
                             "token" -> None,
                             "active" -> false,
                             "admin" -> false)
+    println(data)
     users += (username -> data)
   }
 
@@ -30,6 +43,11 @@ object SysInternalDatabaseManager {
     users(username)("active") = true
   }
 
+  def makeAdmin(username: String) : Unit = {
+    println("Adminifying")
+    users(username)("admin") = true
+  }
+
   def getToken(username: String) ={
     users(username)("token")
   }
@@ -46,6 +64,7 @@ object SysInternalDatabaseManager {
   }
 
   def getUserCredentials(username: String) = {
+    println("User credentials accessed")
     users(username)
   }
 

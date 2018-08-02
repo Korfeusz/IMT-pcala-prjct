@@ -3,6 +3,7 @@ import akka.actor.ActorRef
 import client.ClientDriver.system
 import client.actors.ClientActor
 import client.actors.messages.internalClientMessages.outgoingMessage
+import common.messages.ClientToAuthMessages.Logout
 
 object CommandLineInterface {
   def apply(clientActorRef: ActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses): CommandLineInterface =
@@ -32,7 +33,8 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
       case "login" =>
         username = sessionManager.login()
       case "logout" =>
-        sessionManager.logout(username)
+        printerActorRef ! "Logout request created, goodbye \n"
+        clientActorRef ! outgoingMessage(Logout(username), serverAddresses.authAddress)
       case "stop" | "quit" | "q" | "exit" =>
         sys.exit()
       case _ =>
@@ -43,7 +45,7 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
         println("get unactivated users")
       case "activate" => println("activate: " + parameter)
       case "admin" => println("make admin: " + parameter)
-      case "text" => clientActorRef ! outgoingMessage(parameter, serverAddresses.databaseAddress)
+      case "text" => clientActorRef ! outgoingMessage(parameter, serverAddresses.authAddress)
       case _ => println("WRONG!")
     }
 

@@ -34,9 +34,4 @@ class SessionManager(clientActorRef: ActorRef, printerActorRef: ActorRef, server
     clientActorRef ! outgoingMessage(Login(username, password), serverAddresses.authAddress)
     return username
   }
-
-  def logout(username: String): Unit = {
-    printerActorRef ! "Logout request created, goodbye \n"
-    clientActorRef ! outgoingMessage(Logout(username), serverAddresses.authAddress)
-  }
 }
