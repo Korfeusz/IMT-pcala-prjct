@@ -29,13 +29,14 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
           databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
           sender ! Response("Account registration request created, please be patient.")
         case TokenWrap(message, token) =>
+          println("auth, token check")
           context.actorOf(TokenCheckActor.props(token, message, databaseActor, self, clientRef))
       }
     case passwordCheckResult(username, checkResult, clientRef) =>
       if(checkResult) {
         val tokenString = (Random.alphanumeric take 16).mkString
-        databaseActor ! Token(username, tokenString)
-        clientRef ! Token(username, tokenString)
+        databaseActor ! Token(username, Some(tokenString))
+        clientRef ! Token(username, Some(tokenString))
         clientRef ! "Login Successful"
       } else {
         clientRef ! "Something went wrong, please try again."

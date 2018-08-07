@@ -8,7 +8,9 @@ object ClientToDatabaseMessages {
 
 object AdminToDatabaseMessages {
   case object GetInactiveUsers
-  final case class InactiveUsers(users: collection.Set[String])
+  case object GetAllUsers
+  final case class InactiveUsers(users: collection.Seq[String])
+  final case class AllUsers(users: collection.Seq[String])
   final case class ActivateUser(username:String)
   final case class MakeAdmin(username: String)
   final case class DeleteUser(username: String)

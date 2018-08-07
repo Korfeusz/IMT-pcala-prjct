@@ -2,79 +2,85 @@ package server.database
 import java.security.KeyStore.PasswordProtection
 
 import server.Password
+import slick.jdbc.PostgresProfile.api._
 
 import scala.collection.mutable
 import scala.collection.mutable.Map
+import scala.concurrent.Future
 
 object SysInternalDatabaseManager {
-  def apply: SysInternalDatabaseManager = new SysInternalDatabaseManager()
+  def apply(database: Database): SysInternalDatabaseManager = new SysInternalDatabaseManager(database)
 }
 
+
 class SysInternalDatabaseManager(database: Database) {
-  var users : mutable.Map[String, mutable.Map[String, Any]] = mutable.Map()
-  generateAdmin()
 
-  def generateAdmin(): Unit = {
-    val adminHashAndSalt = Password.generateNewHashAndSalt("admin")
-    addUser("admin", adminHashAndSalt("hash"), adminHashAndSalt("salt"))
-    activateUser("admin")
-    makeAdmin("admin")
+  import Tables.users
 
-  }
-  def addUser(username: String, hash: String, salt: String): Unit = {
+
+  def addUser(username: String, hash: String, salt: String) = {
     println("Adding user... ")
-    val data = mutable.Map( "hash" -> hash,
-                            "salt" -> salt,
-                            "token" -> None,
-                            "active" -> false,
-                            "admin" -> false)
-    println(data)
-    users += (username -> data)
+    val insertAction = DBIO.seq(users += (0, username, hash, salt, None, false, false))
+    database.run(insertAction)
   }
 
-  def deleteUser(username: String): Unit = {
-    users -= username
+  def deleteUser(username: String) = {
+    val q = users.filter(_.name === username)
+    database.run(q.delete)
   }
 
-  def addToken(username: String, tokenString: String) : Unit = {
+  def addToken(username: String, tokenString: Option[String]) = {
     println("Adding token")
-    users(username)("token") = tokenString
+    val q = for {c <- users if c.name === username} yield c.token
+    database.run(q.update(tokenString))
   }
 
-  def deleteToken(username: String) : Unit = {
+  def deleteToken(username: String) = {
     println("Deleting token")
-    users(username)("token") = None
+    val q = for {c <- users if c.name === username} yield c.token
+    database.run(q.update(None))
   }
 
-  def activateUser(username: String) : Unit = {
+  def activateUser(username: String) = {
     println("Activating user")
-    users(username)("active") = true
+    val q = for {c <- users if c.name === username} yield c.isAuthorized
+    database.run(q.update(true))
   }
 
-  def makeAdmin(username: String) : Unit = {
+  def makeAdmin(username: String) = {
     println("Adminifying")
-    users(username)("admin") = true
+    val q = for {c <- users if c.name === username} yield c.isAdmin
+    database.run(q.update(true))
   }
 
-  def getToken(username: String) ={
-    users(username)("token")
+  def getToken(username: String): Future[Option[String]] = {
+    val q = for {c <- users if c.name === username} yield c.token
+    database.run(q.result.head)
   }
-  def testIfAdmin(username: String): Boolean = {
+
+  def testIfAdmin(username: String) = {
     println("Testing if Admin")
-    users(username)("admin").asInstanceOf[Boolean]
+    val q = for {c <- users if c.name === username} yield c.isAdmin
+    database.run(q.result.head)
   }
 
-  def testIfActive(username: String) : Boolean = {
-    users(username)("active").asInstanceOf[Boolean]
-  }
-  def getInactiveUsers: collection.Set[String] = {
-    println(users.filter(p => !p._2("active").asInstanceOf[Boolean]).keySet)
-    users.filter(p => !p._2("active").asInstanceOf[Boolean]).keySet
+  def testIfActive(username: String) = {
+    val q = for {c <- users if c.name === username} yield c.isAuthorized
+    database.run(q.result.head)
   }
 
-  def getUserCredentials(username: String) = {
-    println("User credentials accessed")
-    users(username)
+  def getInactiveUsers = {
+    val q = for {c <- users if c.isAuthorized === false} yield c.name
+    database.run(q.result)
   }
 
+  def getAllUsers = {
+    val q = for {c <- users} yield c.name
+    database.run(q.result)
+  }
+
+  def getUserCredentials(username: String): Future[(String, String, Boolean)] = {
+    val q = for {c <- users if c.name === username} yield (c.passwordHash, c.salt, c.isAuthorized)
+    database.run(q.result.head)
+  }
 }

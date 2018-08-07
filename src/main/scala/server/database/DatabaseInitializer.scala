@@ -3,21 +3,23 @@ import server.Password
 import slick.jdbc.PostgresProfile.api._
 import tables.{Data, Users}
 
+import scala.concurrent.Future
+
 object DatabaseInitializer {
-  def apply(database: Database): DatabaseInitializer = new DatabaseInitializer(database)
+  def apply(url: String, user: String, password: String, driver: String): DatabaseInitializer
+  = new DatabaseInitializer(url, user, password, driver)
 }
 
-class DatabaseInitializer(database: Database) {
-  val users = TableQuery[Users]
-  val data = TableQuery[Data]
-  val adminHashAndSalt = Password.generateNewHashAndSalt("admin")
-  val userHashAndSalt = Password.generateNewHashAndSalt("user")
-
+class DatabaseInitializer(url: String, user: String, password: String, driver: String) {
+  import Tables.{data, users}
+  val database = Database.forURL(url, user = user, password = password, driver = driver)
+  val adminHashAndSalt: Map[String, String] = Password.generateNewHashAndSalt("admin")
+  val userHashAndSalt: Map[String, String] = Password.generateNewHashAndSalt("user")
 
   val setup = DBIO.seq(
     (users.schema ++ data.schema).create,
-    users += (1, "admin",adminHashAndSalt("hash"), adminHashAndSalt("salt"), true, true),
-    users += (2, "user", userHashAndSalt("hash"), userHashAndSalt("salt"), false, true),
+    users += (1, "admin",adminHashAndSalt("hash"), adminHashAndSalt("salt"), None, true, true),
+    users += (2, "user", userHashAndSalt("hash"), userHashAndSalt("salt"), None, false, true),
     data ++= Seq(
       (1, "example1", "some example 1"),
       (2, "example2", "some example 2"),
@@ -26,5 +28,5 @@ class DatabaseInitializer(database: Database) {
     )
   )
 
-  val setupFuture = database.run(setup)
+  val setupFuture: Future[Unit] = database.run(setup)
 }

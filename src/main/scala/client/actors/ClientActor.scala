@@ -2,7 +2,7 @@ package client.actors
 
 import akka.actor.{Actor, ActorRef, Props}
 import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage, setUsername}
-import common.messages.AdminToDatabaseMessages.InactiveUsers
+import common.messages.AdminToDatabaseMessages.{AllUsers, InactiveUsers}
 import common.messages.ClientToAuthMessages._
 import common.messages.CommonMessages._
 
@@ -21,15 +21,20 @@ class ClientActor(printerActorRef: ActorRef) extends Actor{
   override def receive: Receive = {
 //    case setUsername(username) => name = username
     case Token(username, tokenStr) =>
-      tokenString = tokenStr
+      tokenStr match {
+        case Some(tokenStr) => tokenString = tokenStr
+        case None => printerActorRef ! "This user is not logged in."
+      }
       name = username
       printerActorRef ! "Account created! \n"
     case outgoingMessage(message, recipient) =>
-      context.actorSelection(recipient) ! ActorRefWrap(self, TokenWrap(message, Token(name, tokenString)))
+      context.actorSelection(recipient) ! ActorRefWrap(self, TokenWrap(message, Token(name, Option(tokenString))))
     case sessionStartMessage(message, recipient) =>
       context.actorSelection(recipient) ! ActorRefWrap(self, message)
     case InactiveUsers(users) =>
       println("What happened?")
+      printerActorRef ! users
+    case AllUsers(users) =>
       printerActorRef ! users
     case Response(text) =>
       printerActorRef ! text
