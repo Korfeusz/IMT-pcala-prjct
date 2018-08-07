@@ -10,4 +10,6 @@ object AdminToDatabaseMessages {
   case object GetInactiveUsers
   final case class InactiveUsers(users: collection.Set[String])
   final case class ActivateUser(username:String)
+  final case class MakeAdmin(username: String)
+  final case class DeleteUser(username: String)
 }

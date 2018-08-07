@@ -1,7 +1,7 @@
 package server.actors
 
 import akka.actor.{Actor, ActorRef, Props}
-import common.messages.AdminToDatabaseMessages.{ActivateUser, GetInactiveUsers, InactiveUsers}
+import common.messages.AdminToDatabaseMessages._
 import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
 import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
 import common.messages.CommonMessages._
@@ -36,10 +36,17 @@ class DatabaseManagementActor() extends Actor{
     case TokenCheckResult(senderName, message, result, clientRef) if result =>
       message match {
         case GetInactiveUsers if SysInternalDatabaseManager.testIfAdmin(senderName) =>
-          sender ! InactiveUsers(SysInternalDatabaseManager.getInactiveUsers)
+          println("Admin credentials confirmed")
+           clientRef ! InactiveUsers(SysInternalDatabaseManager.getInactiveUsers)
         case ActivateUser(username) if SysInternalDatabaseManager.testIfAdmin(senderName) =>
           SysInternalDatabaseManager.activateUser(username)
-          // Send confirmation to user (username)
+          clientRef ! Response("User " + username + " has been activated.")
+        case MakeAdmin(username) if SysInternalDatabaseManager.testIfAdmin(senderName) =>
+          SysInternalDatabaseManager.makeAdmin(username)
+          clientRef ! Response("User " + username + " has been made an admin")
+        case DeleteUser(username) if SysInternalDatabaseManager.testIfAdmin(senderName) =>
+          SysInternalDatabaseManager.deleteUser(username)
+          clientRef ! Response("User " + username + " has been made an admin")
         case SaveData(data, where) =>
           DatabaseManagement.saveData(data, where)
         case LoadData(where) =>

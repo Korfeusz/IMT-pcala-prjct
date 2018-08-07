@@ -28,6 +28,10 @@ object SysInternalDatabaseManager {
     users += (username -> data)
   }
 
+  def deleteUser(username: String): Unit = {
+    users -= username
+  }
+
   def addToken(username: String, tokenString: String) : Unit = {
     println("Adding token")
     users(username)("token") = tokenString
@@ -60,6 +64,7 @@ object SysInternalDatabaseManager {
     users(username)("active").asInstanceOf[Boolean]
   }
   def getInactiveUsers: collection.Set[String] = {
+    println(users.filter(p => !p._2("active").asInstanceOf[Boolean]).keySet)
     users.filter(p => !p._2("active").asInstanceOf[Boolean]).keySet
   }
 

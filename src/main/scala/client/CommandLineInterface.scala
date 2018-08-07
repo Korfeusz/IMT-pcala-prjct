@@ -3,6 +3,7 @@ import akka.actor.ActorRef
 import client.ClientDriver.system
 import client.actors.ClientActor
 import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage}
+import common.messages.AdminToDatabaseMessages.{ActivateUser, DeleteUser, GetInactiveUsers, MakeAdmin}
 import common.messages.ClientToAuthMessages.Logout
 
 object CommandLineInterface {
@@ -42,9 +43,10 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
     }
     case Seq(command, parameter) => command match {
       case "get" if parameter == "unactivated" =>
-        println("get unactivated users")
-      case "activate" => println("activate: " + parameter)
-      case "admin" => println("make admin: " + parameter)
+        clientActorRef ! outgoingMessage(GetInactiveUsers, serverAddresses.databaseAddress)
+      case "activate" => clientActorRef ! outgoingMessage(ActivateUser(parameter), serverAddresses.databaseAddress)
+      case "admin" => clientActorRef ! outgoingMessage(MakeAdmin(parameter), serverAddresses.databaseAddress)
+      case "delete" => clientActorRef ! outgoingMessage(DeleteUser(parameter), serverAddresses.databaseAddress)
       case "text" => clientActorRef ! sessionStartMessage(parameter, serverAddresses.authAddress)
       case _ => println("WRONG!")
     }
