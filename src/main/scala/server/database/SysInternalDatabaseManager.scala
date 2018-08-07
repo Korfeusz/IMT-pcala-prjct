@@ -7,6 +7,10 @@ import scala.collection.mutable
 import scala.collection.mutable.Map
 
 object SysInternalDatabaseManager {
+  def apply: SysInternalDatabaseManager = new SysInternalDatabaseManager()
+}
+
+class SysInternalDatabaseManager(database: Database) {
   var users : mutable.Map[String, mutable.Map[String, Any]] = mutable.Map()
   generateAdmin()
 
