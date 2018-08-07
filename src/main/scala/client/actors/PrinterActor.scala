@@ -14,7 +14,7 @@ class PrinterActor extends Actor with ActorLogging {
     case LogText(text) =>
       log.info("[Sender: " + sender + "], msg: " + text)
     case  text: String =>
-      print(text)
+      println(text)
 
   }
 }

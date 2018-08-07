@@ -28,6 +28,8 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
           val hashNSalt = generateNewHashAndSalt(password)
           databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
           sender ! Response("Account registration request created, please be patient.")
+        case TokenWrap(message, token) =>
+          context.actorOf(TokenCheckActor.props(token, message, databaseActor, self, clientRef))
       }
     case passwordCheckResult(username, checkResult, clientRef) =>
       if(checkResult) {
@@ -38,12 +40,11 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
       } else {
         clientRef ! "Something went wrong, please try again."
       }
-    case TokenWrap(message, token) =>
-      context.actorOf(TokenCheckActor.props(token, message, databaseActor, self))
-    case TokenCheckResult(_, message, result) if result =>
+    case TokenCheckResult(_, message, result, clientRef) if result =>
       message match {
         case Logout(username) =>
           databaseActor ! DeleteToken(username)
+          clientRef ! "Logout succesful"
       }
     case actor : ActorRef =>
       databaseActor ! actor

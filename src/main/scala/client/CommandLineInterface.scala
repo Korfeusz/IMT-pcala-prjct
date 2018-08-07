@@ -2,7 +2,7 @@ package client
 import akka.actor.ActorRef
 import client.ClientDriver.system
 import client.actors.ClientActor
-import client.actors.messages.internalClientMessages.outgoingMessage
+import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage}
 import common.messages.ClientToAuthMessages.Logout
 
 object CommandLineInterface {
@@ -45,7 +45,7 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
         println("get unactivated users")
       case "activate" => println("activate: " + parameter)
       case "admin" => println("make admin: " + parameter)
-      case "text" => clientActorRef ! outgoingMessage(parameter, serverAddresses.authAddress)
+      case "text" => clientActorRef ! sessionStartMessage(parameter, serverAddresses.authAddress)
       case _ => println("WRONG!")
     }
 

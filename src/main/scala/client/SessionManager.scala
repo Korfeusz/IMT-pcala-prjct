@@ -2,7 +2,7 @@ package client
 import akka.actor.ActorRef
 import client.ClientDriver.system
 import client.actors.ClientActor
-import client.actors.messages.internalClientMessages.outgoingMessage
+import client.actors.messages.internalClientMessages.sessionStartMessage
 import common.messages.ClientToAuthMessages.{Login, RequestRegister, Logout}
 import common.messages.CommonMessages.LogText
 
@@ -24,14 +24,14 @@ class SessionManager(clientActorRef: ActorRef, printerActorRef: ActorRef, server
 
   def register(): String = {
     val (username, password) = readUsernameAndPassword()
-    clientActorRef ! outgoingMessage(RequestRegister(username, password), serverAddresses.authAddress)
+    clientActorRef ! sessionStartMessage(RequestRegister(username, password), serverAddresses.authAddress)
     return username
   }
 
   def login(): String = {
     val (username, password) = readUsernameAndPassword()
     printerActorRef ! "Login request created.\n"
-    clientActorRef ! outgoingMessage(Login(username, password), serverAddresses.authAddress)
+    clientActorRef ! sessionStartMessage(Login(username, password), serverAddresses.authAddress)
     return username
   }
 }

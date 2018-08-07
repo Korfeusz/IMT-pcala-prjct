@@ -29,9 +29,11 @@ class DatabaseManagementActor() extends Actor{
       sender ! UserCredentials(cred("hash").toString, cred("salt").toString, cred("active"))
     case GetToken(username) =>
       sender ! Token(username, SysInternalDatabaseManager.getToken(username).asInstanceOf[String])
-    case TokenWrap(message, token) =>
-      context.actorOf(TokenCheckActor.props(token, message, self, self))
-    case TokenCheckResult(senderName, message, result) if result =>
+    case ActorRefWrap(clientRef, message) => message match {
+      case TokenWrap(message, token) =>
+        context.actorOf(TokenCheckActor.props(token, message, self, self, clientRef))
+    }
+    case TokenCheckResult(senderName, message, result, clientRef) if result =>
       message match {
         case GetInactiveUsers if SysInternalDatabaseManager.testIfAdmin(senderName) =>
           sender ! InactiveUsers(SysInternalDatabaseManager.getInactiveUsers)
