@@ -67,18 +67,30 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: 
     testIfAdmin(clientRef, username, sysDbManager.getAllUsers, responseGenerator)
   }
 
+  def updateResponeGenerator(numberOfAffected: Int, successMsg: String) = {
+    if (numberOfAffected == 1) {
+      Response(successMsg)
+    }
+    else {
+      Response("Such a user does not exist.")
+    }
+  }
+
   def handleActivateUser(clientRef: ActorRef, senderName: String, userToActivate: String) = {
-    val responseGenerator = (_: Any) => Response("User " + userToActivate + " has been activated.")
+    val successMsg = "User " + userToActivate + " has been activated."
+    val responseGenerator = (num: Any) => updateResponeGenerator(num.asInstanceOf[Int], successMsg)
    testIfAdmin(clientRef, senderName, () => sysDbManager.activateUser(userToActivate), responseGenerator)
   }
 
   def handleMakeAdmin(clientRef: ActorRef, senderName: String, userToPromote: String) = {
-    val responseGenerator = (_: Any) => Response("User " + userToPromote + " has been promoted to admin.")
+    val successMsg = "User " + userToPromote + " has been promoted to admin."
+    val responseGenerator = (num: Any) => updateResponeGenerator(num.asInstanceOf[Int], successMsg)
     testIfAdmin(clientRef, senderName, () => sysDbManager.makeAdmin(userToPromote), responseGenerator)
   }
 
   def handleDeleteUser(clientRef: ActorRef, senderName: String, userToDelete: String) = {
-    val responseGenerator = (_: Any) => Response("User " + userToDelete + " has been deleted.")
+    val successMsg = "User " + userToDelete + " has been deleted."
+    val responseGenerator = (num: Any) => updateResponeGenerator(num.asInstanceOf[Int], successMsg)
     testIfAdmin(clientRef, senderName, () => sysDbManager.deleteUser(userToDelete), responseGenerator)
   }
 
