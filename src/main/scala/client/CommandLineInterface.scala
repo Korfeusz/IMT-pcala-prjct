@@ -39,21 +39,39 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
         sys.exit()
       case _ => printerActorRef ! Response("Couldn't find command: " + input)
     }
-    case Seq(command, parameter) => command match {
-      case "get" =>
-        parameter match {
+    case Seq(_, _) => printerActorRef ! Response("Command not found.")
+
+    case Seq(command, operation, target) => command match {
+      case "users" => operation match {
+        case "get" => target match {
           case "unactivated" =>
             clientActorRef ! outgoingMessage(GetInactiveUsers, serverAddresses.databaseAddress)
           case "all" =>
             clientActorRef ! outgoingMessage(GetAllUsers, serverAddresses.databaseAddress)
-          case _ => printerActorRef ! Response("Parameter: " + parameter + " doesnt't match anything to get.")
+          case _ => printerActorRef ! Response("Parameter: " + target + " doesnt't match anything to get.")
         }
-      case "activate" => clientActorRef ! outgoingMessage(ActivateUser(parameter), serverAddresses.databaseAddress)
-      case "admin" => clientActorRef ! outgoingMessage(MakeAdmin(parameter), serverAddresses.databaseAddress)
-      case "delete" => clientActorRef ! outgoingMessage(DeleteUser(parameter), serverAddresses.databaseAddress)
-      case "text" => clientActorRef ! sessionStartMessage(parameter, serverAddresses.authAddress)
-      case _ => printerActorRef ! Response("Couldn't find command: " + command)
+        case "activate" => clientActorRef ! outgoingMessage(ActivateUser(target), serverAddresses.databaseAddress)
+        case "admin" => clientActorRef ! outgoingMessage(MakeAdmin(target), serverAddresses.databaseAddress)
+        case "delete" => clientActorRef ! outgoingMessage(DeleteUser(target), serverAddresses.databaseAddress)
+        case _ => printerActorRef ! Response("Command not found.")
+      }
+      case "database" => operation match {
+        case "get" => target match {
+          case "names" => println("fetching")
+          case name: String => println("fetching specific data")
+        }
+        case "delete" => println("Deleting data")
+      }
+      case _ => printerActorRef ! Response("Command not found.")
     }
-
+    case Seq(command, operation, target, parameter) => command match {
+      case "database" => operation match {
+        case "update" => println("updating")
+        case "add" => println("adding")
+        case _ => printerActorRef ! Response("Command not found.")
+      }
+      case _ => printerActorRef ! Response("Command not found.")
+    }
+    case _ => printerActorRef ! Response("Command not found.")
   }
 }

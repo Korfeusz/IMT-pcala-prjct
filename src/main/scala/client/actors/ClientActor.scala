@@ -19,7 +19,6 @@ class ClientActor(printerActorRef: ActorRef) extends Actor{
   var name: String = ""
 
   override def receive: Receive = {
-//    case setUsername(username) => name = username
     case Token(username, tokenStr) =>
       tokenStr match {
         case Some(tokenStr) => tokenString = tokenStr
