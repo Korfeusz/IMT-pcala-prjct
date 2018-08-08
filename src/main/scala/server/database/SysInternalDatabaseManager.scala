@@ -69,12 +69,12 @@ class SysInternalDatabaseManager(database: Database) {
     database.run(q.result.head)
   }
 
-  def getInactiveUsers = {
+  def getInactiveUsers() = {
     val q = for {c <- users if c.isAuthorized === false} yield c.name
     database.run(q.result)
   }
 
-  def getAllUsers = {
+  def getAllUsers() = {
     val q = for {c <- users} yield c.name
     database.run(q.result)
   }

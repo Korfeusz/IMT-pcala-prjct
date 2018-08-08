@@ -20,6 +20,8 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends 
   import DatabaseManagementActor._
   import server.database.{SysInternalDatabaseManager, DatabaseManagement}
 
+  val responses = Responses.DatabaseActorResponses(sysDbManager, self)
+
   override def receive: Receive = {
     case AddUser(username, encryptedPass, salt) =>
       sysDbManager.addUser(username, encryptedPass, salt)
@@ -28,28 +30,9 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends 
     case Token(username, tokenString) =>
       sysDbManager.addToken(username, tokenString)
     case GetUserCredentials(username) =>
-      val credFuture = sysDbManager.getUserCredentials(username)
-      val originalSender = sender
-      credFuture onComplete {
-        case Success(result) =>
-          val (hash, salt, isAuthorized) = result
-          println(isAuthorized)
-          originalSender ! UserCredentials(hash, salt, isAuthorized)
-        case Failure(result) =>
-          sender ! "Failed."
-      }
+      responses.handleGetUserCredentials(username, sender)
     case GetToken(username) =>
-      println("dbman getToken received")
-      val tokenFuture = sysDbManager.getToken(username)
-      val originalSender = sender
-      tokenFuture onComplete {
-        case Success(result) =>
-          println("dbman token ready")
-          originalSender ! Token(username, result)
-        case Failure(cause) =>
-          println("failed to get token " + cause)
-          originalSender ! "Failed."
-      }
+      responses.handleGetToken(username, sender)
     case ActorRefWrap(clientRef, message) => message match {
       case TokenWrap(message, token) =>
         context.actorOf(TokenCheckActor.props(token, message, self, self, clientRef))
@@ -57,65 +40,15 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends 
     case TokenCheckResult(senderName, message, result, clientRef) if result =>
       message match {
         case GetInactiveUsers  =>
-          val isAdminFuture = sysDbManager.testIfAdmin(senderName)
-          isAdminFuture onComplete {
-            case Success(isAdmin) if isAdmin=>
-              println("Admin credentials confirmed")
-              val inactiveUsersFuture = sysDbManager.getInactiveUsers
-              inactiveUsersFuture onComplete {
-                case Success(inactiveUsers) =>
-                  clientRef ! InactiveUsers(inactiveUsers)
-                case Failure(result) =>
-                  clientRef ! "Failed."
-              }
-            case Failure(res) =>
-              clientRef ! "Failed."
-          }
+          responses.handleGetInactiveUsers(clientRef, senderName)
         case GetAllUsers =>
-          val isAdminFuture = sysDbManager.testIfAdmin(senderName)
-          isAdminFuture onComplete {
-            case Success(isAdmin) if isAdmin=>
-              println("Admin credentials confirmed")
-              val AllUsersFuture = sysDbManager.getAllUsers
-              AllUsersFuture onComplete {
-                case Success(allUsers) =>
-                  clientRef ! AllUsers(allUsers)
-                case Failure(result) =>
-                  clientRef ! "Failed."
-              }
-            case Failure(res) =>
-              clientRef ! "Failed."
-          }
+          responses.handleGetAllUsers(clientRef, senderName)
         case ActivateUser(username) =>
-          val isAdminFuture = sysDbManager.testIfAdmin(senderName)
-          isAdminFuture onComplete {
-            case Success(isAdmin) if isAdmin=>
-              println("Admin credentials confirmed")
-              sysDbManager.activateUser(username)
-              clientRef ! Response("User " + username + " has been activated.")
-            case Failure(res) =>
-              clientRef ! "Failed."
-          }
+          responses.handleActivateUser(clientRef, senderName, username)
         case MakeAdmin(username) =>
-          val isAdminFuture = sysDbManager.testIfAdmin(senderName)
-          isAdminFuture onComplete {
-            case Success(isAdmin) if isAdmin=>
-              println("Admin credentials confirmed")
-              sysDbManager.makeAdmin(username)
-              clientRef ! Response("User " + username + " has been made an admin")
-            case Failure(res) =>
-              clientRef ! "Failed."
-          }
+          responses.handleMakeAdmin(clientRef, senderName, username)
         case DeleteUser(username) =>
-          val isAdminFuture = sysDbManager.testIfAdmin(senderName)
-          isAdminFuture onComplete {
-            case Success(isAdmin) if isAdmin=>
-              println("Admin credentials confirmed")
-              sysDbManager.deleteUser(username)
-              clientRef ! Response("User " + username + " has been deleted")
-            case Failure(res) =>
-              clientRef ! "Failed."
-          }
+          responses.handleDeleteUser(clientRef, senderName, username)
         case SaveData(data, where) =>
           DatabaseManagement.saveData(data, where)
         case LoadData(where) =>

@@ -1,9 +1,13 @@
 package server.database
+import akka.actor.FSM.Failure
 import server.Password
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.meta.MTable
 import tables.{Data, Users}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 object DatabaseInitializer {
   def apply(url: String, user: String, password: String, driver: String): DatabaseInitializer
@@ -29,4 +33,7 @@ class DatabaseInitializer(url: String, user: String, password: String, driver: S
   )
 
   val setupFuture: Future[Unit] = database.run(setup)
+  setupFuture onComplete {
+    case Success(result) => println("setup complete")
+  }
 }
