@@ -5,6 +5,7 @@ import client.actors.ClientActor
 import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage}
 import common.messages.AdminToDatabaseMessages._
 import common.messages.ClientToAuthMessages.Logout
+import common.messages.CommonMessages.Response
 
 object CommandLineInterface {
   def apply(clientActorRef: ActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses): CommandLineInterface =
@@ -16,13 +17,12 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
   var username: String = ""
 
   def printGreetingMessage(): Unit = {
-    printerActorRef ! "Welcome! \n"
+    printerActorRef ! Response("Welcome! \n")
   }
 
   def startInputLoop(): Unit = {
     printGreetingMessage()
     while(true) {
-      printerActorRef ! "> "
       parseInput(scala.io.StdIn.readLine().toLowerCase.split(" "))
     }
   }
@@ -37,7 +37,7 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
         clientActorRef ! outgoingMessage(Logout(username), serverAddresses.authAddress)
       case "stop" | "quit" | "q" | "exit" =>
         sys.exit()
-      case _ => printerActorRef ! "Couldn't find command: " + input
+      case _ => printerActorRef ! Response("Couldn't find command: " + input)
     }
     case Seq(command, parameter) => command match {
       case "get" =>
@@ -46,13 +46,13 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
             clientActorRef ! outgoingMessage(GetInactiveUsers, serverAddresses.databaseAddress)
           case "all" =>
             clientActorRef ! outgoingMessage(GetAllUsers, serverAddresses.databaseAddress)
-          case _ => printerActorRef ! "Parameter: " + parameter + " doesnt't match anything to get."
+          case _ => printerActorRef ! Response("Parameter: " + parameter + " doesnt't match anything to get.")
         }
       case "activate" => clientActorRef ! outgoingMessage(ActivateUser(parameter), serverAddresses.databaseAddress)
       case "admin" => clientActorRef ! outgoingMessage(MakeAdmin(parameter), serverAddresses.databaseAddress)
       case "delete" => clientActorRef ! outgoingMessage(DeleteUser(parameter), serverAddresses.databaseAddress)
       case "text" => clientActorRef ! sessionStartMessage(parameter, serverAddresses.authAddress)
-      case _ => printerActorRef ! "Couldn't find command: " + command
+      case _ => printerActorRef ! Response("Couldn't find command: " + command)
     }
 
   }

@@ -34,15 +34,15 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         val tokenString = (Random.alphanumeric take 16).mkString
         databaseActor ! Token(username, Some(tokenString))
         clientRef ! Token(username, Some(tokenString))
-        clientRef ! "Login Successful"
+        clientRef ! Response("Login Successful")
       } else {
-        clientRef ! "Wrong username or password."
+        clientRef ! Response("Wrong username or password.")
       }
     case TokenCheckResult(_, message, result, clientRef) if result =>
       message match {
         case Logout(username) =>
           databaseActor ! DeleteToken(username)
-          clientRef ! "Logout successful"
+          clientRef ! Response("Logout successful")
       }
     case actor : ActorRef =>
       databaseActor ! actor

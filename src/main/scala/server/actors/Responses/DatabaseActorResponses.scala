@@ -1,13 +1,10 @@
 package server.actors.Responses
 
-import akka.actor.{ActorLogging, ActorRef}
+import akka.actor.ActorRef
 import common.messages.AdminToDatabaseMessages._
 import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
 import common.messages.CommonMessages._
-import server.actors.TokenCheckActor
-import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
-import server.actors.messages.PasswordCheckToDatabaseMessages.{GetUserCredentials, NoSuchUser, UserCredentials}
-import server.actors.messages.TokenCheckToDatabaseMessage.GetToken
+import server.actors.messages.PasswordCheckToDatabaseMessages.{NoSuchUser, UserCredentials}
 import server.database.{DatabaseManagement, SysInternalDatabaseManager}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,13 +46,12 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: 
         if (isAdmin) {
           clientRef.tell(responseGenerator(qResult), dbActor) // Here
         } else {
-          clientRef.tell("You do not have the required priviliges", dbActor)
+          clientRef.tell(Response("You do not have the required privileges"), dbActor)
         }
       case Failure(e) =>
         e.printStackTrace()
     }
   }
-
 
   def handleGetInactiveUsers(clientRef: ActorRef, username: String) = {
     val responseGenerator = (inactiveUsers: Any) => InactiveUsers(inactiveUsers.asInstanceOf[Seq[String]])

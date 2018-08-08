@@ -33,7 +33,4 @@ class DatabaseInitializer(url: String, user: String, password: String, driver: S
   )
 
   val setupFuture: Future[Unit] = database.run(setup)
-  setupFuture onComplete {
-    case Success(result) => println("setup complete")
-  }
 }
