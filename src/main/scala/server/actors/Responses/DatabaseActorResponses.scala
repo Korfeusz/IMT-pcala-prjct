@@ -55,12 +55,12 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbManager
 
   def handleGetInactiveUsers(clientRef: ActorRef, username: String) = {
     val responseGenerator = (inactiveUsers: Any) => InactiveUsers(inactiveUsers.asInstanceOf[Seq[String]])
-    testIfAdmin(clientRef, username, sysDbManager.getInactiveUsers, responseGenerator)
+    testIfAdmin(clientRef, username, () => sysDbManager.getInactiveUsers, responseGenerator)
   }
 
   def handleGetAllUsers(clientRef: ActorRef, username: String) = {
     val responseGenerator = (users: Any) => AllUsers(users.asInstanceOf[Seq[String]])
-    testIfAdmin(clientRef, username, sysDbManager.getAllUsers, responseGenerator)
+    testIfAdmin(clientRef, username, () => sysDbManager.getAllUsers, responseGenerator)
   }
 
   def updateResponeGenerator(numberOfAffected: Int, successMsg: String) = {
