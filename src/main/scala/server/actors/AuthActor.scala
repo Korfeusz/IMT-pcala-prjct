@@ -21,15 +21,12 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
     case ActorRefWrap(clientRef, message) =>
       message match {
         case Login(username, password) =>
-          sender ! "Login request, test"
           context.actorOf(PasswordCheckActor.props(username, password, databaseActor, self, clientRef))
-
         case RequestRegister(username, password) =>
           val hashNSalt = generateNewHashAndSalt(password)
           databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
-          sender ! Response("Account registration request created, please be patient.")
+          sender ! Response("Account registration request created. \nPlease wait to be authorized by an admin.")
         case TokenWrap(message, token) =>
-          println("auth, token check")
           context.actorOf(TokenCheckActor.props(token, message, databaseActor, self, clientRef))
       }
     case passwordCheckResult(username, checkResult, clientRef) =>
@@ -39,13 +36,13 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         clientRef ! Token(username, Some(tokenString))
         clientRef ! "Login Successful"
       } else {
-        clientRef ! "Something went wrong, please try again."
+        clientRef ! "Wrong username or password."
       }
     case TokenCheckResult(_, message, result, clientRef) if result =>
       message match {
         case Logout(username) =>
           databaseActor ! DeleteToken(username)
-          clientRef ! "Logout succesful"
+          clientRef ! "Logout successful"
       }
     case actor : ActorRef =>
       databaseActor ! actor

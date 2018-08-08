@@ -16,7 +16,7 @@ class SessionManager(clientActorRef: ActorRef, printerActorRef: ActorRef, server
     var username: Array[String] = Array()
     var password: Array[String] = Array()
     do {
-      username = scala.io.StdIn.readLine("Uusername: ").split(" ")
+      username = scala.io.StdIn.readLine("Username: ").split(" ")
       password = scala.io.StdIn.readLine("Password: ").split(" ")
     } while(username.length != 1 | password.length != 1)
     (username(0), password(0))
@@ -30,7 +30,6 @@ class SessionManager(clientActorRef: ActorRef, printerActorRef: ActorRef, server
 
   def login(): String = {
     val (username, password) = readUsernameAndPassword()
-    printerActorRef ! "Login request created.\n"
     clientActorRef ! sessionStartMessage(Login(username, password), serverAddresses.authAddress)
     return username
   }

@@ -19,7 +19,6 @@ class SysInternalDatabaseManager(database: Database) {
 
 
   def addUser(username: String, hash: String, salt: String) = {
-    println("Adding user... ")
     val insertAction = DBIO.seq(users += (0, username, hash, salt, None, false, false))
     database.run(insertAction)
   }
@@ -30,25 +29,21 @@ class SysInternalDatabaseManager(database: Database) {
   }
 
   def addToken(username: String, tokenString: Option[String]) = {
-    println("Adding token")
     val q = for {c <- users if c.name === username} yield c.token
     database.run(q.update(tokenString))
   }
 
   def deleteToken(username: String) = {
-    println("Deleting token")
     val q = for {c <- users if c.name === username} yield c.token
     database.run(q.update(None))
   }
 
   def activateUser(username: String) = {
-    println("Activating user")
     val q = for {c <- users if c.name === username} yield c.isAuthorized
     database.run(q.update(true))
   }
 
   def makeAdmin(username: String) = {
-    println("Adminifying")
     val q = for {c <- users if c.name === username} yield c.isAdmin
     database.run(q.update(true))
   }
@@ -59,7 +54,6 @@ class SysInternalDatabaseManager(database: Database) {
   }
 
   def testIfAdmin(username: String) = {
-    println("Testing if Admin")
     val q = for {c <- users if c.name === username} yield c.isAdmin
     database.run(q.result.head)
   }

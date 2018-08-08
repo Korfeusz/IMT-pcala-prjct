@@ -26,15 +26,15 @@ class ClientActor(printerActorRef: ActorRef) extends Actor{
         case None => printerActorRef ! "This user is not logged in."
       }
       name = username
-      printerActorRef ! "Account created! \n"
     case outgoingMessage(message, recipient) =>
       context.actorSelection(recipient) ! ActorRefWrap(self, TokenWrap(message, Token(name, Option(tokenString))))
     case sessionStartMessage(message, recipient) =>
       context.actorSelection(recipient) ! ActorRefWrap(self, message)
     case InactiveUsers(users) =>
-      println("What happened?")
+      printerActorRef ! "Unauthorized users:"
       printerActorRef ! users
     case AllUsers(users) =>
+      printerActorRef ! "All users:"
       printerActorRef ! users
     case Response(text) =>
       printerActorRef ! text

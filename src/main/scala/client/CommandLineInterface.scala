@@ -34,12 +34,10 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
       case "login" =>
         username = sessionManager.login()
       case "logout" =>
-        printerActorRef ! "Logout request created, goodbye \n"
         clientActorRef ! outgoingMessage(Logout(username), serverAddresses.authAddress)
       case "stop" | "quit" | "q" | "exit" =>
         sys.exit()
-      case _ =>
-        println(input)
+      case _ => printerActorRef ! "Couldn't find command: " + input
     }
     case Seq(command, parameter) => command match {
       case "get" =>
@@ -48,12 +46,13 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
             clientActorRef ! outgoingMessage(GetInactiveUsers, serverAddresses.databaseAddress)
           case "all" =>
             clientActorRef ! outgoingMessage(GetAllUsers, serverAddresses.databaseAddress)
+          case _ => printerActorRef ! "Parameter: " + parameter + " doesnt't match anything to get."
         }
       case "activate" => clientActorRef ! outgoingMessage(ActivateUser(parameter), serverAddresses.databaseAddress)
       case "admin" => clientActorRef ! outgoingMessage(MakeAdmin(parameter), serverAddresses.databaseAddress)
       case "delete" => clientActorRef ! outgoingMessage(DeleteUser(parameter), serverAddresses.databaseAddress)
       case "text" => clientActorRef ! sessionStartMessage(parameter, serverAddresses.authAddress)
-      case _ => println("WRONG!")
+      case _ => printerActorRef ! "Couldn't find command: " + command
     }
 
   }

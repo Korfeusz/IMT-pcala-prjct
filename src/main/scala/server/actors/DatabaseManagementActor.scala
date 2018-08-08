@@ -56,8 +56,6 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends 
         case DeleteData(where) =>
           DatabaseManagement.deleteData(where)
       }
-    case actor: ActorRef =>
-      actor ! "I got it!"
     case unexpected: Any =>
       println("Response: Unexpected " + unexpected)
   }
