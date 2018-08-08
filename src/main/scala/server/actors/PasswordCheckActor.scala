@@ -23,7 +23,12 @@ class PasswordCheckActor(username: String, password: String, databaseActor: Acto
     case UserCredentials(hash, salt, activated) if activated =>
       parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt), clientRef)
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
-    case _ => println("Password Checker got something unexpected")
-  }
+    case NoSuchUser =>
+      parentActor ! passwordCheckResult(username, checkResult = false, clientRef)
+      context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
+    case _ =>
+      println("Password Checker got something unexpected")
+      context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
 
+  }
 }

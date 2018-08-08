@@ -6,9 +6,10 @@ import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
 import common.messages.CommonMessages._
 import server.actors.TokenCheckActor
 import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
-import server.actors.messages.PasswordCheckToDatabaseMessages.{GetUserCredentials, UserCredentials}
+import server.actors.messages.PasswordCheckToDatabaseMessages.{GetUserCredentials, NoSuchUser, UserCredentials}
 import server.actors.messages.TokenCheckToDatabaseMessage.GetToken
 import server.database.{DatabaseManagement, SysInternalDatabaseManager}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -24,7 +25,7 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: 
       case Success(credentials) =>
         val (hash, salt, isAuthorized) = credentials
         sender.tell(UserCredentials(hash, salt, isAuthorized), dbActor)
-      case Failure(e) => e.printStackTrace()
+      case Failure(_) => sender.tell(NoSuchUser, dbActor)
     }
   }
 
@@ -32,7 +33,7 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: 
     sysDbManager.getToken(username) onComplete {
       case Success(tokenString) =>
         sender.tell(Token(username, tokenString), dbActor)
-      case Failure(e) => e.printStackTrace()
+      case Failure(e) => sender.tell(NoSuchUser, dbActor)
     }
   }
 

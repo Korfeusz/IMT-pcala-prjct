@@ -73,8 +73,9 @@ class SysInternalDatabaseManager(database: Database) {
     database.run(q.result)
   }
 
-  def getUserCredentials(username: String): Future[(String, String, Boolean)] = {
+  def getUserCredentials(username: String) = {
     val q = for {c <- users if c.name === username} yield (c.passwordHash, c.salt, c.isAuthorized)
     database.run(q.result.head)
+
   }
 }
