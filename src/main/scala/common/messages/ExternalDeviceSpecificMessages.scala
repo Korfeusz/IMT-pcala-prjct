@@ -1,9 +1,12 @@
 package common.messages
 
 object ClientToDatabaseMessages {
-  final case class SaveData(data: Any, where: String)
-  final case class LoadData(where: String)
-  final case class DeleteData(where: String)
+  final case class SaveData(data: String, name: String)
+  final case class LoadData(name: String)
+  final case class DeleteData(name: String)
+  case object LoadAllData
+  final case class DataNames(names: Seq[String])
+  final case class FetchedData(data: String, name: String)
 }
 
 object AdminToDatabaseMessages {

@@ -1,6 +1,6 @@
 package client
 
-import akka.actor.{ActorRef, ActorSystem, Address}
+import akka.actor.{ActorRef, ActorSystem}
 import client.actors.{ClientActor, PrinterActor}
 import com.typesafe.config.ConfigFactory
 

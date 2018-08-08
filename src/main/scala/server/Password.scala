@@ -16,7 +16,6 @@ object Password {
 }
 
 class Password(passwordString: String) {
-  import Password._
   def hashPassword : Password = {
     new Password(
     String.format("%064x", new java.math.BigInteger(1,

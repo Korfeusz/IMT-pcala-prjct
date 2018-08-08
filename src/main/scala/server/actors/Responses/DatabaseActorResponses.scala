@@ -2,7 +2,7 @@ package server.actors.Responses
 
 import akka.actor.ActorRef
 import common.messages.AdminToDatabaseMessages._
-import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
+import common.messages.ClientToDatabaseMessages._
 import common.messages.CommonMessages._
 import server.actors.messages.PasswordCheckToDatabaseMessages.{NoSuchUser, UserCredentials}
 import server.database.{DatabaseManagement, SysInternalDatabaseManager}
@@ -12,11 +12,11 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 object DatabaseActorResponses {
-  def apply(sysDbManager: SysInternalDatabaseManager, DbActor: ActorRef): DatabaseActorResponses
-  = new DatabaseActorResponses(sysDbManager, DbActor)
+  def apply(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement, DbActor: ActorRef): DatabaseActorResponses
+  = new DatabaseActorResponses(sysDbManager, dbManager,  DbActor)
 }
 
-class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: ActorRef){
+class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement, dbActor: ActorRef){
   def handleGetUserCredentials(username: String, sender: ActorRef): Unit = {
     sysDbManager.getUserCredentials(username) onComplete {
       case Success(credentials) =>
@@ -90,17 +90,31 @@ class DatabaseActorResponses(sysDbManager: SysInternalDatabaseManager, dbActor: 
     testIfAdmin(clientRef, senderName, () => sysDbManager.deleteUser(userToDelete), responseGenerator)
   }
 
+  def handleSaveData(clientRef: ActorRef, dataString: String, name: String) = {
+    dbManager.saveData(dataString, name) onComplete {
+      case Success(_) => clientRef.tell(Response("Successfully saved data."), dbActor)
+      case Failure(_) => clientRef.tell(Response("Couldn't store the data, try again."), dbActor)
+    }
+  }
 
+  def handleDeleteData(clientRef: ActorRef, name: String) = {
+    dbManager.deleteData(name)onComplete {
+      case Success(_) => clientRef.tell(Response("Successfully deleted data."), dbActor)
+      case Failure(_) => clientRef.tell(Response("Couldn't delete the data, try again."), dbActor)
+    }
+  }
+
+  def handleLoadData(clientRef: ActorRef, name: String) = {
+    dbManager.loadData(name) onComplete {
+      case Success(data) => clientRef.tell(FetchedData(data, name), dbActor)
+      case Failure(_) => clientRef.tell(Response("Couldn't get the data, try again."), dbActor)
+    }
+  }
+
+  def handleLoadAll(clientRef: ActorRef) = {
+    dbManager.loadAllNames() onComplete {
+      case Success(names) => clientRef.tell(DataNames(names), dbActor)
+      case Failure(_) => clientRef.tell(Response("Couldn't get the data, try again."), dbActor)
+    }
+  }
 }
-
-//case SaveData(data, where) =>
-//DatabaseManagement.saveData(data, where)
-//case LoadData(where) =>
-//DatabaseManagement.loadData(where)
-//case DeleteData(where) =>
-//DatabaseManagement.deleteData(where)
-//}
-//case actor: ActorRef =>
-//actor ! "I got it!"
-//case unexpected: Any =>
-//println("Response: Unexpected " + unexpected)

@@ -1,26 +1,22 @@
 package server.actors
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, Props}
 import common.messages.AdminToDatabaseMessages._
-import common.messages.ClientToDatabaseMessages.{DeleteData, LoadData, SaveData}
-import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
+import common.messages.ClientToDatabaseMessages.{DeleteData, LoadAllData, LoadData, SaveData}
 import common.messages.CommonMessages._
-import server.actors.messages.PasswordCheckToDatabaseMessages.{GetUserCredentials, UserCredentials}
+import server.actors.messages.AuthToDatabaseMessages.{AddUser, DeleteToken}
+import server.actors.messages.PasswordCheckToDatabaseMessages.GetUserCredentials
 import server.actors.messages.TokenCheckToDatabaseMessage.GetToken
-import server.database.SysInternalDatabaseManager
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Success, Failure}
+import server.database.{DatabaseManagement, SysInternalDatabaseManager}
 
 object DatabaseManagementActor {
-  def props(sysDbManager: SysInternalDatabaseManager): Props
-  = Props(new DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager))
+  def props(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement): Props
+  = Props(new DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement))
 }
 
-class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends Actor{
-  import DatabaseManagementActor._
-  import server.database.{SysInternalDatabaseManager, DatabaseManagement}
+class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement) extends Actor{
 
-  val responses = Responses.DatabaseActorResponses(sysDbManager, self)
+  val responses = Responses.DatabaseActorResponses(sysDbManager, dbManager, self)
 
   override def receive: Receive = {
     case AddUser(username, encryptedPass, salt) =>
@@ -49,12 +45,14 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager) extends 
           responses.handleMakeAdmin(clientRef, senderName, username)
         case DeleteUser(username) =>
           responses.handleDeleteUser(clientRef, senderName, username)
-        case SaveData(data, where) =>
-          DatabaseManagement.saveData(data, where)
-        case LoadData(where) =>
-          DatabaseManagement.loadData(where)
-        case DeleteData(where) =>
-          DatabaseManagement.deleteData(where)
+        case SaveData(data, name) =>
+          responses.handleSaveData(clientRef, data, name)
+        case LoadData(name) =>
+          responses.handleLoadData(clientRef, name)
+        case DeleteData(name) =>
+          responses.handleDeleteData(clientRef, name)
+        case LoadAllData =>
+          responses.handleLoadAll(clientRef)
       }
     case unexpected: Any =>
       println("Response: Unexpected " + unexpected)

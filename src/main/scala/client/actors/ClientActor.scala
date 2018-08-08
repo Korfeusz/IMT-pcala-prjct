@@ -1,12 +1,10 @@
 package client.actors
 
 import akka.actor.{Actor, ActorRef, Props}
-import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage, setUsername}
+import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage}
 import common.messages.AdminToDatabaseMessages.{AllUsers, InactiveUsers}
-import common.messages.ClientToAuthMessages._
+import common.messages.ClientToDatabaseMessages.{DataNames, FetchedData}
 import common.messages.CommonMessages._
-
-import scala.util.Random
 
 object ClientActor {
   def props(printerActorRef: ActorRef): Props =
@@ -14,7 +12,6 @@ object ClientActor {
 }
 
 class ClientActor(printerActorRef: ActorRef) extends Actor{
-  import ClientActor._
   var tokenString: String = ""
   var name: String = ""
 
@@ -35,6 +32,13 @@ class ClientActor(printerActorRef: ActorRef) extends Actor{
     case AllUsers(users) =>
       printerActorRef ! "All users:"
       printerActorRef ! users
+    case DataNames(names) =>
+      printerActorRef ! "All data names"
+      printerActorRef ! names
+    case FetchedData(data, name) =>
+      printerActorRef ! "Found data:\n"
+      printerActorRef ! "name: " + name + "\n"
+      printerActorRef ! Response("Data: " + data)
     case Response(text) =>
       printerActorRef ! Response(text)
     case text: String =>

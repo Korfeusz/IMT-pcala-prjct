@@ -1,7 +1,6 @@
 package client
 
 import akka.actor.Address
-import client.ClientDriver.{host, port}
 
 object ServerActorAddresses {
   def apply(host: String, port: Int): ServerActorAddresses = new ServerActorAddresses(host: String, port: Int)

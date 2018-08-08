@@ -2,10 +2,9 @@ package server.actors
 import akka.actor.{Actor, ActorRef, Props}
 import common.messages.ClientToAuthMessages._
 import common.messages.CommonMessages._
+import server.Password.generateNewHashAndSalt
 import server.actors.messages.AuthToDatabaseMessages._
-import server.Password.{checkPassword, generateNewHashAndSalt}
 import server.actors.messages.PasswordCheckToAuthActorMessages.passwordCheckResult
-import server.actors.PasswordCheckActor
 
 import scala.util.Random
 
@@ -14,7 +13,6 @@ object AuthActor {
 }
 
 class AuthActor(databaseActor: ActorRef) extends Actor{
-  import AuthActor._
 
   override def receive: Receive = {
 

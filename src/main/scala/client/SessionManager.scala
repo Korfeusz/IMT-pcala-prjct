@@ -1,10 +1,7 @@
 package client
 import akka.actor.ActorRef
-import client.ClientDriver.system
-import client.actors.ClientActor
 import client.actors.messages.internalClientMessages.sessionStartMessage
-import common.messages.ClientToAuthMessages.{Login, RequestRegister, Logout}
-import common.messages.CommonMessages.LogText
+import common.messages.ClientToAuthMessages.{Login, RequestRegister}
 
 object SessionManager {
   def apply(clientActorRef: ActorRef, printerActorRef: ActorRef, serverAddresses: ServerActorAddresses): SessionManager =

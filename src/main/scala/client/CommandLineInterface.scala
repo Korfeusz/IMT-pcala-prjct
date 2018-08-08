@@ -1,10 +1,9 @@
 package client
 import akka.actor.ActorRef
-import client.ClientDriver.system
-import client.actors.ClientActor
-import client.actors.messages.internalClientMessages.{outgoingMessage, sessionStartMessage}
+import client.actors.messages.internalClientMessages.outgoingMessage
 import common.messages.AdminToDatabaseMessages._
 import common.messages.ClientToAuthMessages.Logout
+import common.messages.ClientToDatabaseMessages.{DeleteData, LoadAllData, LoadData, SaveData}
 import common.messages.CommonMessages.Response
 
 object CommandLineInterface {
@@ -57,17 +56,16 @@ class CommandLineInterface(clientActorRef: ActorRef, printerActorRef: ActorRef, 
       }
       case "database" => operation match {
         case "get" => target match {
-          case "names" => println("fetching")
-          case name: String => println("fetching specific data")
+          case "names" => clientActorRef ! outgoingMessage(LoadAllData, serverAddresses.databaseAddress)
+          case name: String => clientActorRef ! outgoingMessage(LoadData(name), serverAddresses.databaseAddress)
         }
-        case "delete" => println("Deleting data")
+        case "delete" => clientActorRef ! outgoingMessage(DeleteData(target), serverAddresses.databaseAddress)
       }
       case _ => printerActorRef ! Response("Command not found.")
     }
     case Seq(command, operation, target, parameter) => command match {
       case "database" => operation match {
-        case "update" => println("updating")
-        case "add" => println("adding")
+        case "add" => clientActorRef ! outgoingMessage(SaveData(parameter, target), serverAddresses.databaseAddress)
         case _ => printerActorRef ! Response("Command not found.")
       }
       case _ => printerActorRef ! Response("Command not found.")

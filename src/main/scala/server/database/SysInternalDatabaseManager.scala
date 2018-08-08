@@ -1,11 +1,6 @@
 package server.database
-import java.security.KeyStore.PasswordProtection
-
-import server.Password
 import slick.jdbc.PostgresProfile.api._
 
-import scala.collection.mutable
-import scala.collection.mutable.Map
 import scala.concurrent.Future
 
 object SysInternalDatabaseManager {
@@ -18,32 +13,32 @@ class SysInternalDatabaseManager(database: Database) {
   import Tables.users
 
 
-  def addUser(username: String, hash: String, salt: String) = {
+  def addUser(username: String, hash: String, salt: String): Future[Unit] = {
     val insertAction = DBIO.seq(users += (0, username, hash, salt, None, false, false))
     database.run(insertAction)
   }
 
-  def deleteUser(username: String) = {
+  def deleteUser(username: String): Future[Int] = {
     val q = users.filter(_.name === username)
     database.run(q.delete)
   }
 
-  def addToken(username: String, tokenString: Option[String]) = {
+  def addToken(username: String, tokenString: Option[String]): Future[Int] = {
     val q = for {c <- users if c.name === username} yield c.token
     database.run(q.update(tokenString))
   }
 
-  def deleteToken(username: String) = {
+  def deleteToken(username: String): Future[Int] = {
     val q = for {c <- users if c.name === username} yield c.token
     database.run(q.update(None))
   }
 
-  def activateUser(username: String) = {
+  def activateUser(username: String): Future[Int] = {
     val q = for {c <- users if c.name === username} yield c.isAuthorized
     database.run(q.update(true))
   }
 
-  def makeAdmin(username: String) = {
+  def makeAdmin(username: String): Future[Int] = {
     val q = for {c <- users if c.name === username} yield c.isAdmin
     database.run(q.update(true))
   }
@@ -53,27 +48,27 @@ class SysInternalDatabaseManager(database: Database) {
     database.run(q.result.head)
   }
 
-  def testIfAdmin(username: String) = {
+  def testIfAdmin(username: String): Future[Boolean] = {
     val q = for {c <- users if c.name === username} yield c.isAdmin
     database.run(q.result.head)
   }
 
-  def testIfActive(username: String) = {
+  def testIfActive(username: String): Future[Boolean] = {
     val q = for {c <- users if c.name === username} yield c.isAuthorized
     database.run(q.result.head)
   }
 
-  def getInactiveUsers() = {
+  def getInactiveUsers: Future[Seq[String]] = {
     val q = for {c <- users if c.isAuthorized === false} yield c.name
     database.run(q.result)
   }
 
-  def getAllUsers() = {
+  def getAllUsers: Future[Seq[String]] = {
     val q = for {c <- users} yield c.name
     database.run(q.result)
   }
 
-  def getUserCredentials(username: String) = {
+  def getUserCredentials(username: String): Future[(String, String, Boolean)] = {
     val q = for {c <- users if c.name === username} yield (c.passwordHash, c.salt, c.isAuthorized)
     database.run(q.result.head)
 

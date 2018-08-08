@@ -8,7 +8,6 @@ object PrinterActor {
 }
 
 class PrinterActor extends Actor with ActorLogging {
-  import PrinterActor._
 
   def receive = {
     case sequence: collection.Seq[String] =>
