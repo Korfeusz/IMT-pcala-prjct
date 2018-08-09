@@ -56,6 +56,8 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager,
         case LoadAllData =>
           responses.handleLoadAll(clientRef)
       }
+    case TokenCheckResult(_, _, result, clientRef) if !result =>
+      clientRef ! Response("Database access denied: Are You logged in?")
     case unexpected: Any =>
       printer ! "[LOG:Db]: Unexpected " + unexpected
   }

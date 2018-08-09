@@ -45,6 +45,8 @@ class AuthActor(databaseActor: ActorRef, printer: ActorRef) extends Actor{
           clientRef ! Response("Logout successful")
           printer ! "[LOG:Auth]: User " + username + " logged out."
       }
+    case TokenCheckResult(_, _, result, clientRef) if !result =>
+      clientRef ! Response("Access denied: Are You logged in?")
     case actor : ActorRef =>
       databaseActor ! actor
     case unexpected: Any =>
