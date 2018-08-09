@@ -19,14 +19,18 @@ class PasswordCheckActor(username: String, password: String, databaseActor: Acto
   databaseActor ! GetUserCredentials(username)
 
   override def receive: Receive = {
-    case UserCredentials(hash, salt, activated) if activated =>
-      parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt), clientRef)
+    case UserCredentials(hash, salt, activated) =>
+      if (activated) {
+        parentActor ! passwordCheckResult(username, checkResult = checkPassword(hash, password, salt), clientRef)
+      } else {
+        parentActor ! passwordCheckResult(username, checkResult = false, clientRef)
+      }
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
     case NoSuchUser =>
       parentActor ! passwordCheckResult(username, checkResult = false, clientRef)
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
-    case _ =>
-      println("Password Checker got something unexpected")
+    case unexpected: Any =>
+      println("Password Checker got something unexpected: " + unexpected)
       context.system.scheduler.scheduleOnce(1 second, self, PoisonPill)
 
   }
