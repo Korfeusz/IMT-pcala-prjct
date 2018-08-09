@@ -1,8 +1,9 @@
 package client
 
 import akka.actor.{ActorRef, ActorSystem}
-import client.actors.{ClientActor, PrinterActor}
+import client.actors.ClientActor
 import com.typesafe.config.ConfigFactory
+import common.actors.PrinterActor
 
 object ClientDriver extends  App {
   val host = "127.0.0.1"

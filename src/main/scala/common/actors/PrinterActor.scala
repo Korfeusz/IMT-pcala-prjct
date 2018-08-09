@@ -1,4 +1,4 @@
-package client.actors
+package common.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import common.messages.CommonMessages.{LogText, Response}

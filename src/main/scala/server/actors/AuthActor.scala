@@ -9,10 +9,10 @@ import server.actors.messages.PasswordCheckToAuthActorMessages.passwordCheckResu
 import scala.util.Random
 
 object AuthActor {
-  def props(databaseActor: ActorRef): Props = Props(new AuthActor(databaseActor: ActorRef))
+  def props(databaseActor: ActorRef, printer: ActorRef): Props = Props(new AuthActor(databaseActor: ActorRef, printer: ActorRef))
 }
 
-class AuthActor(databaseActor: ActorRef) extends Actor{
+class AuthActor(databaseActor: ActorRef, printer: ActorRef) extends Actor{
 
   override def receive: Receive = {
 
@@ -23,6 +23,7 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         case RequestRegister(username, password) =>
           val hashNSalt = generateNewHashAndSalt(password)
           databaseActor ! AddUser(username, hashNSalt("hash"), hashNSalt("salt"))
+          printer ! "[LOG:Auth]: User " + username + " registration request created."
           sender ! Response("Account registration request created. \nPlease wait to be authorized by an admin.")
         case TokenWrap(message, token) =>
           context.actorOf(TokenCheckActor.props(token, message, databaseActor, self, clientRef))
@@ -32,6 +33,7 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         val tokenString = (Random.alphanumeric take 16).mkString
         databaseActor ! Token(username, Some(tokenString))
         clientRef ! Token(username, Some(tokenString))
+        printer ! "[LOG:Auth]: User " + username + " logged in."
         clientRef ! Response("Login Successful")
       } else {
         clientRef ! Response("Wrong username or password.")
@@ -41,10 +43,11 @@ class AuthActor(databaseActor: ActorRef) extends Actor{
         case Logout(username) =>
           databaseActor ! DeleteToken(username)
           clientRef ! Response("Logout successful")
+          printer ! "[LOG:Auth]: User " + username + " logged out."
       }
     case actor : ActorRef =>
       databaseActor ! actor
     case unexpected: Any =>
-      println("Response: Unexpected " + unexpected)
+      printer ! "[LOG:Auth]: Unexpected " + unexpected
   }
 }

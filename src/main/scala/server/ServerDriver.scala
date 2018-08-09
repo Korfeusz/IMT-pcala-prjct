@@ -2,6 +2,7 @@ package server
 
 import akka.actor.{ActorRef, ActorSystem}
 import com.typesafe.config.ConfigFactory
+import common.actors.PrinterActor
 import server.actors.{AuthActor, DatabaseManagementActor}
 import server.database.{DatabaseInitializer, DatabaseManagement, SysInternalDatabaseManager}
 
@@ -18,8 +19,9 @@ object ServerDriver extends App {
   val sysDbManager = SysInternalDatabaseManager(database)
   val dbManager = DatabaseManagement(database)
 
-  val databaseActorRef: ActorRef = system.actorOf(DatabaseManagementActor.props(sysDbManager, dbManager), "DbActor")
-  val authActorRef: ActorRef = system.actorOf(AuthActor.props(databaseActorRef), "AuthActor")
+  val srvrPrinterActorRef: ActorRef = system.actorOf(PrinterActor.props)
+  val databaseActorRef: ActorRef = system.actorOf(DatabaseManagementActor.props(sysDbManager, dbManager, srvrPrinterActorRef), "DbActor")
+  val authActorRef: ActorRef = system.actorOf(AuthActor.props(databaseActorRef, srvrPrinterActorRef), "AuthActor")
 
 }
 

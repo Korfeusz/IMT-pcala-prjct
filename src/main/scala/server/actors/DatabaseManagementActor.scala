@@ -1,6 +1,6 @@
 package server.actors
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import common.messages.AdminToDatabaseMessages._
 import common.messages.ClientToDatabaseMessages.{DeleteData, LoadAllData, LoadData, SaveData}
 import common.messages.CommonMessages._
@@ -10,11 +10,13 @@ import server.actors.messages.TokenCheckToDatabaseMessage.GetToken
 import server.database.{DatabaseManagement, SysInternalDatabaseManager}
 
 object DatabaseManagementActor {
-  def props(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement): Props
-  = Props(new DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement))
+  def props(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement, printer: ActorRef): Props
+  = Props(new DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement, printer: ActorRef))
 }
 
-class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManager: DatabaseManagement) extends Actor{
+class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager,
+                              dbManager: DatabaseManagement,
+                              printer: ActorRef) extends Actor{
 
   val responses = Responses.DatabaseActorResponses(sysDbManager, dbManager, self)
 
@@ -55,6 +57,6 @@ class DatabaseManagementActor(sysDbManager: SysInternalDatabaseManager, dbManage
           responses.handleLoadAll(clientRef)
       }
     case unexpected: Any =>
-      println("Response: Unexpected " + unexpected)
+      printer ! "[LOG:Db]: Unexpected " + unexpected
   }
 }
